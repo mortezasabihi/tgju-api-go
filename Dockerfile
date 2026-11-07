@@ -7,12 +7,23 @@
 # small and caches well. BuildKit cache mounts keep the module and build caches
 # between builds without baking them into the image.
 # ---------------------------------------------------------------------------
-FROM golang:1.27-alpine AS build
+# Where the base image and Go modules come from. The defaults are the official
+# sources; docker-compose.yml overrides them with Iranian mirrors, because
+# Docker Hub and proxy.golang.org are not reachable from servers in Iran.
+ARG GO_IMAGE=golang:1.27-alpine
+
+FROM ${GO_IMAGE} AS build
+
+ARG GOPROXY=https://proxy.golang.org,direct
+# Optional Alpine package mirror, e.g. https://mirror.example.ir/alpine. Empty
+# keeps the image's default repositories.
+ARG ALPINE_MIRROR=
 
 # Reproducibility: build with exactly the toolchain go.mod asks for rather than
 # letting the builder fetch a newer one halfway through.
 ENV GOTOOLCHAIN=local \
-    CGO_ENABLED=0
+    CGO_ENABLED=0 \
+    GOPROXY=${GOPROXY}
 
 WORKDIR /src
 
@@ -20,7 +31,10 @@ WORKDIR /src
 # until tzdata is installed. The runtime stage copies it: without it, a
 # container started with TZ=Asia/Tehran silently falls back to UTC, which for
 # an Iranian price tool is a wrong answer rather than a missing one.
-RUN apk add --no-cache tzdata
+RUN if [ -n "$ALPINE_MIRROR" ]; then \
+      sed -i "s#https\?://[^/]*/alpine#${ALPINE_MIRROR%/}#" /etc/apk/repositories; \
+    fi && \
+    apk add --no-cache tzdata
 
 # Dependencies first: this layer only changes when go.mod or go.sum does.
 COPY go.mod go.sum ./

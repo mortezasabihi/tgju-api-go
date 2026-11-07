@@ -2,6 +2,7 @@
 #
 #   docker compose up --build
 #   curl localhost:8080/v1/markets/gold
+#   curl localhost:8080/v1/markets/transfer
 #   open http://localhost:8080/docs
 #
 # Every setting below has a sensible default baked into the image; they are
@@ -14,7 +15,16 @@ services:
       dockerfile: Dockerfile
       args:
         VERSION: ${TGJU_VERSION:-dev}
-    image: ghcr.io/amiranmanesh/tgju-api-go:${TGJU_VERSION:-dev}
+        # Docker Hub and proxy.golang.org are blocked for servers in Iran, so
+        # the build pulls through Iranian mirrors. Override any of these from
+        # the environment (or Portainer's stack variables) to switch.
+        GO_IMAGE: ${TGJU_GO_IMAGE:-docker.arvancloud.ir/golang:1.27-alpine}
+        GOPROXY: ${TGJU_GOPROXY:-https://mirror-go.runflare.com,https://goproxy.io,direct}
+        ALPINE_MIRROR: ${TGJU_ALPINE_MIRROR:-}
+    # Always build from this repository. A registry image name here would let
+    # compose pull the upstream image instead, which has no transfer market.
+    image: tgju-api-go:local
+    pull_policy: build
     container_name: tgju-api
     restart: unless-stopped
 

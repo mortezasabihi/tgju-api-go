@@ -17,6 +17,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `docker-compose.yml` always builds from this repository (`image: tgju-api-go:local`,
+  `pull_policy: build`) and pulls the Go base image and modules through Iranian mirrors
+  (`docker.arvancloud.ir`, `mirror-go.runflare.com`). The Dockerfile takes them as
+  `GO_IMAGE`, `GOPROXY` and `ALPINE_MIRROR` build args, defaulting to the official sources.
+
 - Updated GitHub Actions versions for checkout, Go setup and GitHub Pages publishing.
 - Upgraded `golang.org/x/net` to v0.62.0, the build image to Go 1.27, and the
   `upload-artifact`, `build-push-action`, `setup-buildx-action`,
