@@ -31,6 +31,10 @@ services:
     ports:
       - "${TGJU_BIND_IP:-127.0.0.1}:${TGJU_PORT:-8080}:8080"
 
+    networks:
+      - default
+      - commerce-tgju-monitoring
+
     environment:
       # Every flag of `tgju serve` has a TGJU_ variable; see `tgju serve -h`.
       TGJU_ADDR: ":8080"
@@ -75,3 +79,9 @@ services:
         limits:
           cpus: "1.0"
           memory: 128M
+
+networks:
+  default: {}
+
+  commerce-tgju-monitoring:
+    external: true
